@@ -12,7 +12,7 @@ def preprocess_frame(observ, output_size):
     return output
 
 
-class AtariEnv(object):
+class AtariEnv:
     def __init__(self,
                  name,
                  num_frames,

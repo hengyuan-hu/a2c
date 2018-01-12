@@ -69,7 +69,7 @@ def set_all_seeds(rand_seed):
     torch.cuda.manual_seed(large_randint())
 
 
-class Config(object):
+class Config:
     def __init__(self, attrs):
         self.__dict__.update(attrs)
 
