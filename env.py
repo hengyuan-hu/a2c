@@ -15,13 +15,16 @@ def preprocess_frame(observ, output_size):
 class AtariEnv:
     def __init__(self,
                  name,
+                 frame_skip,
                  num_frames,
                  frame_size,
+                 no_op_start=30,
                  record=False,
                  output_dir=None):
 
         self.name = name
         self.env = gym.make(name)
+        self.frame_skip = frame_skip
         self.num_actions = self.env.action_space.n
 
         if record:
@@ -29,11 +32,19 @@ class AtariEnv:
 
         self.frame_size = frame_size
         self.num_frames = num_frames
+        self.state_shape = (num_frames, frame_size, frame_size)
         self.frame_queue = deque(maxlen=num_frames)
+        self.no_op_start = no_op_start
 
         self.end = True
-        self.lives = None
-        self.total_reward = 0.0
+        self.lives = self.env.env.ale.lives()
+        self.epsd_reward = 0.0
+        self.recent_epsd_rewards = deque(maxlen=10)
+
+    @property
+    def average_rewards(self):
+        """running average of episode rewards"""
+        return np.mean(self.recent_epsd_rewards)
 
     def set_seed(self, seed):
         self.env.seed(seed)
@@ -43,17 +54,22 @@ class AtariEnv:
 
     def reset(self):
         """reset env and frame queue, return initial state """
+        self.recent_epsd_rewards.append(self.epsd_reward)
         self.end = False
-        self.lives = None
-        self.total_reward = 0.0
+        self.epsd_reward = 0.0
 
         for _ in range(self.num_frames-1):
             empty_frame = np.zeros((self.frame_size, self.frame_size))
             self.frame_queue.append(empty_frame)
 
-        state0 = self.env.reset()
-        state0 = preprocess_frame(state0, self.frame_size)
-        self.frame_queue.append(state0)
+        state = self.env.reset()
+        # no_op_start
+        n = np.random.randint(0, self.no_op_start + 1)
+        for _ in range(n):
+            state, reward, *_ = self.env.step(0)
+            self.epsd_reward += reward
+
+        self.frame_queue.append(preprocess_frame(state, self.frame_size))
         return np.array(self.frame_queue)
 
     def step(self, action):
@@ -62,18 +78,23 @@ class AtariEnv:
         state: [frames] of length num_frames, 0 if fewer is available
         reward: float
         """
+        # if self.end: # TODO: remove this after speed test
+        #     self.reset()
+
         assert not self.end, 'Acting on an ended environment'
 
-        observ, reward, self.end, info = self.env.step(action)
-        observ = preprocess_frame(observ, self.frame_size)
-        self.frame_queue.append(observ) # left is automatically popped
-        self.total_reward += reward
+        for _ in range(self.frame_skip):
+            state, reward, self.end, info = self.env.step(action)
+            self.epsd_reward += reward
 
-        if self.lives is None:
-            self.lives = info['ale.lives']
-        if info['ale.lives'] < self.lives:
-            self.end = True
+            if info['ale.lives'] < self.lives:
+                self.end = True
 
+            if self.end:
+                break
+
+        state = preprocess_frame(state, self.frame_size)
+        self.frame_queue.append(state) # left is automatically popped
         state = np.array(self.frame_queue)
         reward = np.sign(reward)
         return state, reward
@@ -84,7 +105,7 @@ class AtariEnv:
 
 if __name__ == '__main__':
 
-    env = AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 84)
+    env = AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84)
     """{
         0: 'Noop',
         1: 'Fire',
