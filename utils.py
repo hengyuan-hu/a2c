@@ -59,7 +59,7 @@ def one_hot(x, n):
 
 
 def large_randint():
-    return random.randint(int(1e5), int(1e6))
+    return random.randint(int(1e4), int(1e6))
 
 
 def set_all_seeds(rand_seed):
