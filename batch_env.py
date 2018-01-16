@@ -46,7 +46,8 @@ class SharedBuffer:
 
 class BatchSyncEnv:
     def __init__(self, envs):
-        self.envs = envs
+        self.envs = envs # TODO: use thunk
+        self.name = envs[0].name
         self.num_envs = len(envs)
         self.num_actions = self.envs[0].num_actions
 
@@ -78,6 +79,8 @@ class BatchSyncEnv:
 
     @staticmethod
     def _single_env_process(env, cv, shared_buffer, eid, total_frames, traj_len):
+        utils.set_all_seeds(eid)
+
         for fid in range(total_frames):
             cv.wait_for_work(eid)
 
@@ -115,8 +118,23 @@ class BatchSyncEnv:
         return states, rewards, non_ends
 
 
+def save_frames(name_tpl, states):
+    import os
+    import cv2
+
+    dirname = os.path.dirname(name_tpl)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+    for i in range(len(states)):
+        state = states[i]
+        name = name_tpl % (i)
+        cv2.imwrite(name, cv2.resize(state[-1], (800, 800)))
+
+
 if __name__ == '__main__':
     from env import AtariEnv
+    utils.set_all_seeds(100009)
 
     num_envs = 128
     envs = [AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84)
@@ -124,3 +142,11 @@ if __name__ == '__main__':
     benv = BatchSyncEnv(envs)
     benv.create_processes(200000, 4)
     actions = np.random.randint(0, envs[0].num_actions, (num_envs,))
+    # actions = np.array(list(range(envs[0].num_actions)))
+
+    # name_tpl = 'dev/batch_env2_%s/' % envs[0].name
+    # for sidx in range(300):
+    #     name_tpl_ = name_tpl + 'env%d_' + ('step%d.png' % sidx)
+    #     states, rewards, non_ends = benv.step(actions)
+    #     states = states.cpu().numpy()
+    #     save_frames(name_tpl_, states)
