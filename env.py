@@ -5,9 +5,10 @@ import cv2
 import numpy as np
 
 
-def preprocess_frame(observ, output_size):
-    gray = cv2.cvtColor(observ, cv2.COLOR_RGB2GRAY)
-    output = cv2.resize(gray, (output_size, output_size))
+def preprocess_frame(screen, prev_screen, frame_size):
+    screen =  np.maximum(screen, prev_screen)
+    gray = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
+    output = cv2.resize(gray, (frame_size, frame_size))
     output = output.astype(np.float32, copy=False)
     return output
 
@@ -36,6 +37,7 @@ class AtariEnv:
         self.frame_queue = deque(maxlen=num_frames)
         self.no_op_start = no_op_start
 
+        self.prev_screen = None
         self.end = True
         self.lives = self.env.env.ale.lives()
         self.epsd_reward = 0.0
@@ -62,14 +64,18 @@ class AtariEnv:
             empty_frame = np.zeros((self.frame_size, self.frame_size))
             self.frame_queue.append(empty_frame)
 
-        state = self.env.reset()
+        screen = self.env.reset()
+        self.prev_screen = screen
         # no_op_start
         n = np.random.randint(0, self.no_op_start + 1)
-        for _ in range(n):
-            state, reward, *_ = self.env.step(0)
+        for i in range(n):
+            screen, reward, *_ = self.env.step(0)
             self.epsd_reward += reward
+            if i == n - 2: # next to the last
+                self.prev_screen = screen
 
-        self.frame_queue.append(preprocess_frame(state, self.frame_size))
+        frame = preprocess_frame(screen, self.prev_screen, self.frame_size)
+        self.frame_queue.append(frame)
         return np.array(self.frame_queue)
 
     def step(self, action):
@@ -78,13 +84,14 @@ class AtariEnv:
         state: [frames] of length num_frames, 0 if fewer is available
         reward: float
         """
-        # if self.end: # TODO: remove this after speed test
-        #     self.reset()
-
         assert not self.end, 'Acting on an ended environment'
 
-        for _ in range(self.frame_skip):
-            state, reward, self.end, info = self.env.step(action)
+        screen = None
+        for i in range(self.frame_skip):
+            if i > 0:
+                self.prev_screen = screen
+
+            screen, reward, self.end, info = self.env.step(action)
             self.epsd_reward += reward
 
             if info['ale.lives'] < self.lives:
@@ -93,8 +100,9 @@ class AtariEnv:
             if self.end:
                 break
 
-        state = preprocess_frame(state, self.frame_size)
-        self.frame_queue.append(state) # left is automatically popped
+        frame = preprocess_frame(screen, self.prev_screen, self.frame_size)
+        self.prev_screen = screen
+        self.frame_queue.append(frame)
         state = np.array(self.frame_queue)
         reward = np.sign(reward)
         return state, reward
