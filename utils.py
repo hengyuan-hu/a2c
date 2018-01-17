@@ -15,6 +15,18 @@ def assert_eq(real, expected):
     assert real == expected, '%s (true) vs %s (expected)' % (real, expected)
 
 
+def tensor_eq(t1, t2):
+    if t1.size() != t2.size():
+        print('Warning: size mismatch', t1.size(), 'vs', t2.size())
+        return False
+
+    t1 = t1.cpu().numpy()
+    t2 = t2.cpu().numpy()
+    diff = abs(t1 - t2)
+    eq = (diff < 1e-5).all()
+    return eq
+
+
 def assert_zero_grads(params):
     for p in params:
         if p.grad is not None:
@@ -70,6 +82,10 @@ def set_all_seeds(rand_seed):
 
 
 class Config:
+    """helper class to handle configs
+
+    train_config, eval_config etc."""
+
     def __init__(self, attrs):
         self.__dict__.update(attrs)
 
@@ -91,3 +107,30 @@ class Config:
 
     def __repr__(self):
         return json.dumps(vars(self), sort_keys=True, indent=2)
+
+
+class Logger(object):
+    """helper class to handle logging issue"""
+
+    def __init__(self, output_name):
+        self.log_file = open(output_name, 'w')
+        self.infos = {}
+
+    def append(self, key, val):
+        vals = self.infos.setdefault(key, [])
+        vals.append(val)
+
+    def log(self, extra_msg=''):
+        msgs = [extra_msg]
+        for key, vals in self.infos.iteritems():
+            msgs.append('%s %.6f' % (key, np.mean(vals)))
+        msg = '\n'.join(msgs)
+        self.log_file.write(msg + '\n')
+        self.log_file.flush()
+        self.infos = {}
+        return msg
+
+    def write(self, msg):
+        self.log_file.write(msg + '\n')
+        self.log_file.flush()
+        print(msg)
