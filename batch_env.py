@@ -81,12 +81,13 @@ class BatchSyncEnv:
     def _single_env_process(env, cv, shared_buffer, eid, total_frames, traj_len):
         utils.set_all_seeds(eid)
 
-        for fid in range(total_frames):
+        for fid in range(-1, total_frames):
             cv.wait_for_work(eid)
 
-            new_traj = (fid % traj_len == 0)
             if env.end:
+                new_traj = ((fid+1) % traj_len == 0)
                 if new_traj:
+                    # reset only if next state is the start of a new trajectory
                     state = env.reset()
                 else:
                     # dummy state
@@ -98,7 +99,7 @@ class BatchSyncEnv:
             else:
                 state, reward = env.step(shared_buffer.actions[eid])
                 shared_buffer.rewards[eid] = reward
-                shared_buffer.non_ends[eid] = 1.0
+                shared_buffer.non_ends[eid] = 1.0 - np.float32(env.end)
 
             shared_buffer.states[eid][:]= state
 
