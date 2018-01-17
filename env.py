@@ -8,9 +8,10 @@ import numpy as np
 def preprocess_frame(screen, prev_screen, frame_size):
     screen =  np.maximum(screen, prev_screen)
     gray = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
-    output = cv2.resize(gray, (frame_size, frame_size))
-    output = output.astype(np.float32, copy=False)
-    return output
+    frame = cv2.resize(gray, (frame_size, frame_size))
+    frame = frame.astype(np.float32, copy=False)
+    frame /= 255.0
+    return frame
 
 
 class AtariEnv:
