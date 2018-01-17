@@ -40,14 +40,10 @@ def assert_frozen(module):
 
 def weights_init(m):
     """custom weights initialization"""
-    classtype = m.__class__
-    if classtype == nn.Linear or classtype == nn.Conv2d:
-        m.weight.data.normal_(0.0, 0.02)
-    elif classtype == nn.BatchNorm2d:
-        m.weight.data.normal_(1.0, 0.02)
-        m.bias.data.fill_(0)
+    if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
+        nn.init.kaiming_normal(m.weight.data)
     else:
-        print('%s is not initialized.' % classtype)
+        print('%s is not custom-initialized.' % m.__class__)
 
 
 def init_net(net, net_file):
@@ -122,7 +118,7 @@ class Logger(object):
 
     def log(self, extra_msg=''):
         msgs = [extra_msg]
-        for key, vals in self.infos.iteritems():
+        for key, vals in self.infos.items():
             msgs.append('%s %.6f' % (key, np.mean(vals)))
         msg = '\n'.join(msgs)
         self.log_file.write(msg + '\n')
