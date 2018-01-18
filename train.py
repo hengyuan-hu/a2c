@@ -65,10 +65,10 @@ def train(model, env, config, evaluator):
             num_updates = (fid + 1) // config.traj_len
             total_frames = (fid + 1) * env.num_envs
             frame_rate = int(log_interval * env.num_envs / (time.time() - t))
-            print('Frames: %d, Total Frames: %d Frame rate: %d, Updates: %d' % (
-                fid+1, total_frames, frame_rate, num_updates))
-            print('Updates:', num_updates)
-            print(logger.log())
+            logger.write(
+                'Step %d, Total Frames: %d Frame rate: %d, Updates: %d' % (
+                    fid+1, total_frames, frame_rate, num_updates))
+            logger.write(logger.log())
 
             avg_rewards = evaluator(model, logger)
             if avg_rewards > best_avg_rewards:
