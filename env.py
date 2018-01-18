@@ -62,7 +62,8 @@ class AtariEnv:
         self.epsd_reward = 0.0
 
         for _ in range(self.num_frames-1):
-            empty_frame = np.zeros((self.frame_size, self.frame_size))
+            empty_frame = np.zeros(
+                (self.frame_size, self.frame_size), dtype=np.float32)
             self.frame_queue.append(empty_frame)
 
         screen = self.env.reset()
@@ -81,9 +82,10 @@ class AtariEnv:
 
     def step(self, action):
         """Perform action and return frame sequence and reward.
-        Return:
-        state: [frames] of length num_frames, 0 if fewer is available
-        reward: float
+
+        return:
+            state: [frames] of length num_frames, 0 if fewer is available
+            reward: float
         """
         assert not self.end, 'Acting on an ended environment'
 
@@ -113,7 +115,6 @@ class AtariEnv:
 
 
 if __name__ == '__main__':
-
     env = AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84)
     """{
         0: 'Noop',
