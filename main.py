@@ -34,7 +34,7 @@ def parse_args():
                         help='number of stacked frames per state')
     parser.add_argument('--frame_size', type=int, default=84)
     parser.add_argument('--frame_skip', type=int, default=4)
-    parser.add_argument('--total_frames', type=int, default=int(200e6),
+    parser.add_argument('--total_frames', type=int, default=int(80e6),
                         help='total # of frame for envs (sum)')
     # system
     parser.add_argument('--seed', type=int, default=100901)
