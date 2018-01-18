@@ -48,7 +48,9 @@ class Experience:
         # print('++++++++++++++++')
         # print(self.returns)
         # print('++++++++++++++++\n\n')
-        # if self.non_ends.min() < 1:
+        # # if self.non_ends.min() < 1:
+        # #     assert False
+        # if self.rewards.max() > 0:
         #     assert False
 
         batch = self.traj_len * self.num_envs

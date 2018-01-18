@@ -10,6 +10,8 @@ import time
 
 def update(model, optim, next_vals, exps, gamma, ent_coef, max_grad_norm, logger):
     states, actions, returns = exps.compute_returns(gamma, next_vals)
+    # print('updating')
+    # print(actions.view(5, 16))
     with model.train():
         loss, vals_loss, actions_loss, entropys = model.loss(
             states, actions, returns, ent_coef)
@@ -40,6 +42,7 @@ def train(model, env, config, evaluator):
     t = time.time()
     for fid in range(config.frames_per_env):
         actions = model.get_actions(states, False)
+        # print(actions.view(-1))
         actions_np = actions.cpu().numpy().reshape(-1)
         next_states, rewards, non_ends = env.step(actions_np)
         exp_buffer.add_timestep(states, actions, rewards, non_ends)
