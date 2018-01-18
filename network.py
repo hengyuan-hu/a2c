@@ -73,7 +73,7 @@ if __name__ == '__main__':
     for noise_std in [0.0, 0.2]:
         x = torch.rand(1, 4, 84, 84)
         x = Variable(x)
-        net = build_default_network(4, 84, 6, 0, None)
+        net = build_default_network(4, 84, 6, noise_std, None)
         print(net)
         print('Training?:', net.training)
         v, pi = net(x)
