@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import numpy as np
+from collections import OrderedDict
 
 
 EPS = 1e-7
@@ -41,7 +42,8 @@ def assert_frozen(module):
 def weights_init(m):
     """custom weights initialization"""
     if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
-        nn.init.kaiming_normal(m.weight.data)
+        # nn.init.kaiming_normal(m.weight.data)
+        nn.init.orthogonal(m.weight.data)
     else:
         print('%s is not custom-initialized.' % m.__class__)
 
@@ -110,20 +112,22 @@ class Logger(object):
 
     def __init__(self, output_name):
         self.log_file = open(output_name, 'w')
-        self.infos = {}
+        self.infos = OrderedDict()
 
     def append(self, key, val):
         vals = self.infos.setdefault(key, [])
         vals.append(val)
 
-    def log(self, extra_msg=''):
-        msgs = [extra_msg]
+    def log(self, extra_msg=None):
+        msgs = []
+        if extra_msg:
+            msgs = [extra_msg]
         for key, vals in self.infos.items():
             msgs.append('%s %.6f' % (key, np.mean(vals)))
         msg = '\n'.join(msgs)
         self.log_file.write(msg + '\n')
         self.log_file.flush()
-        self.infos = {}
+        self.infos = OrderedDict()
         return msg
 
     def write(self, msg):
