@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 import utils
 
@@ -30,7 +29,6 @@ def categorical_logp(logits, actions, calc_entropy):
 
 if __name__ == '__main__':
     from torch.autograd import Variable
-    #TODO: check shape of logp and entropy
     logits = Variable(torch.rand(4, 3)) # batch, num_actions
     actions = Variable(torch.LongTensor([0, 1, 2, 1]))
     actions = actions.view(-1, 1)

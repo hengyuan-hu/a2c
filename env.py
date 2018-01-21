@@ -1,12 +1,12 @@
 """Wrapper of OpenAI Gym enviroment"""
 from collections import deque
-import gym
 import cv2
 import numpy as np
+import gym
 
 
 def preprocess_frame(screen, prev_screen, frame_size):
-    screen =  np.maximum(screen, prev_screen)
+    screen = np.maximum(screen, prev_screen)
     gray = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
     frame = cv2.resize(gray, (frame_size, frame_size))
     frame = frame.astype(np.float32, copy=False)

@@ -1,9 +1,8 @@
-import torch
+from contextlib import contextmanager
 import torch.nn as nn
 from torch.autograd import Variable
 import distribution as dist
 import utils
-from contextlib import contextmanager
 
 
 class A2C:
@@ -36,7 +35,6 @@ class A2C:
         utils.assert_eq(vals_loss.size(), entropys.size())
 
         loss = actions_loss + vals_loss - entropys * ent_coef
-        # loss = -entropys * ent_coef
         return loss, vals_loss, actions_loss, entropys
 
     def get_values(self, states):

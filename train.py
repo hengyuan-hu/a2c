@@ -1,25 +1,21 @@
 import os
+import time
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import utils
 from experience import Experience
-import time
 
 
 def update(model, optim, next_vals, exps, gamma, ent_coef, max_grad_norm, logger):
     states, actions, returns = exps.compute_returns(gamma, next_vals)
-    # print('updating')
-    # print(actions.view(5, 16))
     with model.train():
         loss, vals_loss, actions_loss, entropys = model.loss(
             states, actions, returns, ent_coef)
 
         loss = loss.mean()
         loss.backward()
-        total_norm = nn.utils.clip_grad_norm(model.parameters(), max_grad_norm)
-        # print('total norm', total_norm)
+        nn.utils.clip_grad_norm(model.parameters(), max_grad_norm)
         optim.step()
         optim.zero_grad()
         logger.append('loss', loss.data[0])
@@ -113,17 +109,3 @@ def evaluate(env, num_epsd, model, logger):
         logger.write('\t action: %d, p: %.4f' % (action, prob))
 
     return avg_rewards
-
-
-# def save_frames(name_tpl, states):
-#     import os
-#     import cv2
-
-#     dirname = os.path.dirname(name_tpl)
-#     if not os.path.exists(dirname):
-#         os.makedirs(dirname)
-
-#     for i in range(len(states)):
-#         state = states[i]
-#         name = name_tpl % (i)
-#         cv2.imwrite(name, cv2.resize(state[-1], (800, 800)))

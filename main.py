@@ -59,7 +59,7 @@ if __name__ == '__main__':
     env_thunk = lambda : env.AtariEnv(
         cfg.env_name, cfg.frame_skip, cfg.num_frames, cfg.frame_size, True)
     train_env = batch_env.BatchSyncEnv(env_thunk, cfg.num_envs)
-    train_env.create_processes(cfg.frames_per_env, cfg.traj_len)
+    train_env.create_processes()
 
     # eval env
     eval_env = env.AtariEnv(

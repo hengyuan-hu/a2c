@@ -3,7 +3,6 @@ import ctypes
 import numpy as np
 import torch
 import utils
-from env import AtariEnv
 from condv import MasterWorkersCV
 
 
@@ -57,7 +56,7 @@ class BatchSyncEnv:
         self.cv = MasterWorkersCV(self.num_envs)
         self.shared_buffer = SharedBuffer(self.num_envs, self.state_shape)
 
-    def create_processes(self, total_frames, traj_len):
+    def create_processes(self):
         for eid in range(self.num_envs):
             args = (self.env_thunk, self.cv, self.shared_buffer, eid)
             p = mp.Process(target=self._single_env_step, args=args)
@@ -111,7 +110,7 @@ def save_frames(name_tpl, states):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    for i in range(len(states)):
+    for i, state in enumerate(states):
         state = states[i]
         name = name_tpl % (i)
         cv2.imwrite(name, cv2.resize(state[-1], (800, 800)))
@@ -127,7 +126,7 @@ if __name__ == '__main__':
     # envs = [AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84)
     #         for _ in range(num_envs)]
     benv = BatchSyncEnv(env_thunk, num_envs)
-    benv.create_processes(200000, 4)
+    benv.create_processes()
     actions = np.random.randint(0, benv.num_actions, (num_envs,))
 
     name_tpl = 'dev/batch_env_%s/' % benv.name

@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 import utils
 
@@ -41,17 +40,6 @@ class Experience:
         for i in range(self.traj_len-1, -1, -1):
             self.returns[i] = (self.returns[i+1] * self.non_ends[i] * gamma
                                + self.rewards[i])
-
-        # print(self.non_ends)
-        # print('++++++++++++++++')
-        # print(self.rewards)
-        # print('++++++++++++++++')
-        # print(self.returns)
-        # print('++++++++++++++++\n\n')
-        # # if self.non_ends.min() < 1:
-        # #     assert False
-        # if self.rewards.max() > 0:
-        #     assert False
 
         batch = self.traj_len * self.num_envs
         states = self.states.view(batch, *self.state_shape).contiguous()
