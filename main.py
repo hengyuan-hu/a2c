@@ -56,13 +56,13 @@ if __name__ == '__main__':
 
     # train env
     env_thunk = lambda : env.AtariEnv(
-        cfg.env_name, cfg.frame_skip, cfg.num_frames, cfg.frame_size)
+        cfg.env_name, cfg.frame_skip, cfg.num_frames, cfg.frame_size, True)
     train_env = batch_env.BatchSyncEnv(env_thunk, cfg.num_envs)
     train_env.create_processes(cfg.frames_per_env, cfg.traj_len)
 
     # eval env
     eval_env = env.AtariEnv(
-        cfg.env_name, cfg.frame_skip, cfg.num_frames, cfg.frame_size)
+        cfg.env_name, cfg.frame_skip, cfg.num_frames, cfg.frame_size, False)
 
     evaluator = lambda model, logger: train.evaluate(eval_env, 3, model, logger)
 

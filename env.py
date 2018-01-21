@@ -20,22 +20,28 @@ class AtariEnv:
                  frame_skip,
                  num_frames,
                  frame_size,
+                 one_life,
                  no_op_start=30,
                  record=False,
                  output_dir=None):
 
+        # env
         self.name = name
         self.env = gym.make(name)
-        self.frame_skip = frame_skip
         self.num_actions = self.env.action_space.n
 
         if record:
             self.env = gym.wrappers.Monitor(self.env, output_dir, force=True)
 
-        self.frame_size = frame_size
+        # frame
+        self.frame_skip = frame_skip
         self.num_frames = num_frames
+        self.frame_size = frame_size
         self.state_shape = (num_frames, frame_size, frame_size)
         self.frame_queue = deque(maxlen=num_frames)
+
+        # game
+        self.one_life = one_life
         self.no_op_start = no_op_start
 
         self.prev_screen = None
@@ -90,14 +96,19 @@ class AtariEnv:
         assert not self.end, 'Acting on an ended environment'
 
         screen = None
+        reward = 0
+        clipped_reward = 0
         for i in range(self.frame_skip):
             if i > 0:
                 self.prev_screen = screen
 
-            screen, reward, self.end, info = self.env.step(action)
-            self.epsd_reward += reward
+            screen, r, self.end, info = self.env.step(action)
+            reward += r
+            if r > 0:
+                print(r, i)
+            clipped_reward += np.sign(r)
 
-            if info['ale.lives'] < self.lives:
+            if self.one_life and info['ale.lives'] < self.lives:
                 self.end = True
 
             if self.end:
@@ -107,8 +118,10 @@ class AtariEnv:
         self.prev_screen = screen
         self.frame_queue.append(frame)
         state = np.array(self.frame_queue)
-        reward = np.sign(reward)
-        return state, reward
+        self.epsd_reward += reward
+        if clipped_reward > 1:
+            print('wow: clipped reward', clipped_reward)
+        return state, clipped_reward
 
     def close(self):
         self.env.close()
