@@ -32,7 +32,7 @@ def train(model, env, config, evaluator):
     logger = utils.Logger(os.path.join(config.output, 'train_log.txt'))
     optim = torch.optim.RMSprop(model.parameters(), lr=7e-4, alpha=0.99, eps=1e-5)
     exp_buffer = Experience(env.num_envs, config.traj_len, env.state_shape)
-    action_dist = np.zeros(env.num_actions)
+    # action_dist = np.zeros(env.num_actions)
 
     best_avg_rewards = -float('inf')
     # TODO: lrschedule='linear'
@@ -42,7 +42,6 @@ def train(model, env, config, evaluator):
     t = time.time()
     for fid in range(config.frames_per_env):
         actions = model.get_actions(states, False)
-        # print(actions.view(-1))
         actions_np = actions.cpu().numpy().reshape(-1)
         next_states, rewards, non_ends = env.step(actions_np)
         exp_buffer.add_timestep(states, actions, rewards, non_ends)
@@ -60,15 +59,16 @@ def train(model, env, config, evaluator):
 
         states = next_states
 
-        log_interval = 10000
-        if (fid + 1) % log_interval == 0:
+        if (fid + 1) % config.log_per_steps == 0:
             num_updates = (fid + 1) // config.traj_len
             total_frames = (fid + 1) * env.num_envs
-            frame_rate = int(log_interval * env.num_envs / (time.time() - t))
-            logger.write(
-                'Step %d, Total Frames: %d Frame rate: %d, Updates: %d' % (
-                    fid+1, total_frames, frame_rate, num_updates))
-            logger.write(logger.log())
+            frame_rate = int(config.log_per_steps * env.num_envs / (time.time() - t))
+            logger.write('Step %s, Total Frames: %s, Updates: %s, Frame Rate: %d' % (
+                utils.num2str(fid + 1),
+                utils.num2str(total_frames),
+                utils.num2str(num_updates),
+                frame_rate))
+            logger.log(delimiter=', ')
 
             avg_rewards = evaluator(model, logger)
             if avg_rewards > best_avg_rewards:
@@ -80,7 +80,7 @@ def train(model, env, config, evaluator):
 
 
 def evaluate(env, num_epsd, model, logger):
-    actions = np.zeros(env.num_actions)
+    action_dist = np.zeros(env.num_actions)
     total_rewards = np.zeros(num_epsd)
     epsd_idx = 0
     epsd_iters = 0
@@ -88,31 +88,11 @@ def evaluate(env, num_epsd, model, logger):
 
     state = env.reset()
     while epsd_idx < num_epsd:
-        # # save state
-        # import cv2, os
-        # filename = 'dev/debug/epsd%d_f%d.png' % (epsd_idx, epsd_iters)
-        # dirname = os.path.dirname(filename)
-        # if not os.path.exists(dirname):
-        #     os.makedirs(dirname)
-        # frame = state[0] * 255.0
-        # cv2.imwrite(filename, cv2.resize(frame, (800, 800)))
-
         state = torch.from_numpy(state).unsqueeze(0).cuda()
-        # if epsd_iters % 30 == 0:
-        #     action = model.get_actions(state, False, True)[0][0]
-        # else:
-        #     action = model.get_actions(state, False)[0][0]
         action = model.get_actions(state, False)[0][0]
-        actions[action] += 1
+        action_dist[action] += 1
         state, _ = env.step(action)
         epsd_iters += 1
-
-        # if epsd_iters % 100 == 0:
-        #     print('state max:', state.max())
-        #     print('state min:', state.min())
-
-        # if epsd_iters > 400:
-        #     break
 
         if env.end or epsd_iters >= max_epsd_iters:
             total_rewards[epsd_idx] = env.epsd_reward
@@ -125,11 +105,10 @@ def evaluate(env, num_epsd, model, logger):
             epsd_idx += 1
             epsd_iters = 0
 
-
     avg_rewards = total_rewards.mean()
     logger.write('>>>Eval: avg total rewards: %.2f' % avg_rewards)
-    logger.write('>>>Eval: actions dist:')
-    probs = list(actions/actions.sum())
+    logger.write('>>>Eval: action dist:')
+    probs = list(action_dist/action_dist.sum())
     for action, prob in enumerate(probs):
         logger.write('\t action: %d, p: %.4f' % (action, prob))
 

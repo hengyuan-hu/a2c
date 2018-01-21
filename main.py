@@ -36,8 +36,9 @@ def parse_args():
     parser.add_argument('--frame_skip', type=int, default=4)
     parser.add_argument('--total_frames', type=int, default=int(80e6),
                         help='total # of frame for envs (sum)')
-    # system
+    # misc
     parser.add_argument('--seed', type=int, default=100901)
+    parser.add_argument('--log_per_steps', type=int, default=int(10e3))
     parser.add_argument('--output', default='dev/')
 
     args = parser.parse_args()

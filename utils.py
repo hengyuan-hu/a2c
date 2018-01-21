@@ -79,6 +79,23 @@ def set_all_seeds(rand_seed):
     torch.cuda.manual_seed(large_randint())
 
 
+def num2str(n):
+    if n < 1e3:
+        s = str(n)
+        unit = ''
+    elif n < 1e6:
+        n /= 1e3
+        s = '%.3f' % n
+        unit = 'K'
+    else:
+        n /= 1e6
+        s = '%.3f' % n
+        unit = 'M'
+
+    s = s.rstrip('0').rstrip('.')
+    return s + unit
+
+
 class Config:
     """helper class to handle configs
 
@@ -118,17 +135,15 @@ class Logger(object):
         vals = self.infos.setdefault(key, [])
         vals.append(val)
 
-    def log(self, extra_msg=None):
+    def log(self, *, delimiter='\n'):
         msgs = []
-        if extra_msg:
-            msgs = [extra_msg]
         for key, vals in self.infos.items():
             msgs.append('%s %.6f' % (key, np.mean(vals)))
-        msg = '\n'.join(msgs)
+        msg = delimiter.join(msgs)
         self.log_file.write(msg + '\n')
         self.log_file.flush()
         self.infos = OrderedDict()
-        return msg
+        print(msg)
 
     def write(self, msg):
         self.log_file.write(msg + '\n')
