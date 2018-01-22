@@ -105,8 +105,6 @@ class AtariEnv:
 
             screen, r, self.end, info = self.env.step(action)
             reward += r
-            # if r > 0:
-            #     print(r, i)
             clipped_reward += np.sign(r)
 
             if self.one_life and info['ale.lives'] < self.lives:

@@ -52,7 +52,7 @@ class A2C:
         vals, _ = self.net(states)
         return vals.data
 
-    def get_actions(self, states, greedy, print_=False):
+    def get_actions(self, states, greedy):
         """
         params:
             states: Tensor, [batch, channel, size, size]
@@ -65,10 +65,6 @@ class A2C:
 
         states = Variable(states, volatile=True)
         _, pi_logits = self.net(states)
-        if print_:
-            probs = nn.functional.softmax(pi_logits, 1)
-            print(probs.data * 10000)
-
         actions = dist.categorical_sample(pi_logits, greedy)
         return actions.data
 
