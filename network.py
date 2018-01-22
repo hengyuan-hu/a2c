@@ -47,8 +47,11 @@ def _build_fc(dims, num_actions, noise_std, wn):
         assert not wn, 'weight norm is not supported for NoisyNet'
         layer_func = lambda indim, outdim: NoisyLinear(indim, outdim, noise_std)
     else:
-        layer_func = lambda indim, outdim: weight_norm(
-            nn.Linear(indim, outdim), dim=None)
+        if wn:
+            layer_func = lambda indim, outdim: weight_norm(
+                nn.Linear(indim, outdim), dim=None)
+        else:
+            layer_func = nn.Linear
 
     layers = []
     for i in range(0, len(dims) - 1):
