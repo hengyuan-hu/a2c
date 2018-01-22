@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torch.nn.utils.weight_norm import weight_norm
 from noisy_net import NoisyLinear
 import utils
 
@@ -24,23 +25,30 @@ class ActorCriticNetwork(nn.Module):
 
 
 # ---------------------------------------
-def _build_default_conv(in_channels):
+def _build_default_conv(in_channels, wn):
+    if wn:
+        wrapper = lambda x: weight_norm(x)
+    else:
+        wrapper = lambda x: x
+
     conv = nn.Sequential(
-        nn.Conv2d(in_channels, 32, 8, 4),
+        wrapper(nn.Conv2d(in_channels, 32, 8, 4)),
         nn.ReLU(),
-        nn.Conv2d(32, 64, 4, 2),
+        wrapper(nn.Conv2d(32, 64, 4, 2)),
         nn.ReLU(),
-        nn.Conv2d(64, 64, 3, 1),
+        wrapper(nn.Conv2d(64, 64, 3, 1)),
         nn.ReLU()
     )
     return conv
 
 
-def _build_fc(dims, num_actions, noise_std):
+def _build_fc(dims, num_actions, noise_std, wn):
     if noise_std is not None and noise_std > 0:
+        assert not wn, 'weight norm is not supported for NoisyNet'
         layer_func = lambda indim, outdim: NoisyLinear(indim, outdim, noise_std)
     else:
-        layer_func = nn.Linear
+        layer_func = lambda indim, outdim: weight_norm(
+            nn.Linear(indim, outdim), dim=None)
 
     layers = []
     for i in range(0, len(dims) - 1):
@@ -53,13 +61,15 @@ def _build_fc(dims, num_actions, noise_std):
     return fc, value, pi_logit
 
 
-def build_default_network(in_channels, in_size, num_actions, noise_std, net_file):
-    conv = _build_default_conv(in_channels)
+def build_default_network(
+        in_channels, in_size, num_actions, noise_std, wn, net_file):
+
+    conv = _build_default_conv(in_channels, wn)
 
     in_shape = (1, in_channels, in_size, in_size)
     fc_in = utils.count_output_size(in_shape, conv)
     fc_hid = 512
-    fc, value, pi_logit = _build_fc([fc_in, fc_hid], num_actions, noise_std)
+    fc, value, pi_logit = _build_fc([fc_in, fc_hid], num_actions, noise_std, wn)
 
     net = ActorCriticNetwork(conv, fc, value, pi_logit)
     utils.init_net(net, net_file)

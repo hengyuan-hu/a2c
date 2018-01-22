@@ -25,6 +25,8 @@ def parse_args():
                         help='entropy term coefficient (default: 0.01)')
     parser.add_argument('--max_grad_norm', type=float, default=0.5,
                         help='max norm of gradients (default: 0.5)')
+    parser.add_argument('--weight_norm', action='store_true')
+
     # enviroment
     parser.add_argument('--env_name', default='PongNoFrameskip-v4')
     parser.add_argument('--num_envs', type=int, default=16)
@@ -40,9 +42,12 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=100901)
     parser.add_argument('--log_per_steps', type=int, default=int(10e3))
     parser.add_argument('--output', default='dev/')
+    parser.add_argument('--exp_name', type=str, default='')
 
     args = parser.parse_args()
     args.output = os.path.join(args.output, args.env_name)
+    if args.exp_name:
+        args.output = '%s_%s' % (args.output, args.exp_name)
     args.frames_per_env = args.total_frames // args.num_envs
     return args
 
@@ -64,11 +69,12 @@ if __name__ == '__main__':
     # eval env
     eval_env = env.AtariEnv(
         cfg.env_name, cfg.frame_skip, cfg.num_frames, cfg.frame_size, False)
-
     evaluator = lambda model, logger: train.evaluate(eval_env, 3, model, logger)
 
+    num_actions = train_env.num_actions
     net = network.build_default_network(
-        cfg.num_frames, cfg.frame_size, train_env.num_actions, None, None)
-    a2c_model = a2c.A2C(net.cuda())
+        cfg.num_frames, cfg.frame_size, num_actions, None, args.weight_norm, None)
+    print(net)
 
+    a2c_model = a2c.A2C(net.cuda())
     train.train(a2c_model, train_env, cfg, evaluator)
