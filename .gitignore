@@ -3,3 +3,5 @@ test.py
 dev/*
 exps/*
 *.pyc
+render_plot.py
+*.png
