@@ -64,7 +64,8 @@ if __name__ == '__main__':
     utils.set_all_seeds(args.seed)
     cfg = utils.Config.load(os.path.join(args.output, 'cfg.txt'))
     eval_env = AtariEnv(
-        cfg.env_name, cfg.frame_skip, cfg.num_frames, cfg.frame_size, False)
+        cfg.env_name, cfg.frame_skip, cfg.num_frames, cfg.frame_size, False,
+        record=True, output_dir=cfg.output)
 
     netfile = os.path.join(args.output, 'net.pth')
     num_actions = eval_env.num_actions

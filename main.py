@@ -48,7 +48,6 @@ def parse_args():
     args.output = os.path.join(args.output, args.env_name)
     if args.exp_name:
         args.output = '%s_%s' % (args.output, args.exp_name)
-    args.frames_per_env = args.total_frames // args.num_envs
     return args
 
 

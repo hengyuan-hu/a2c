@@ -25,11 +25,11 @@ class AtariEnv:
                  no_op_start=30,
                  record=False,
                  output_dir=None):
-
         # env
         self.name = name
         self.env = gym.make(name)
         self.num_actions = self.env.action_space.n
+        self.lives = self.env.env.ale.lives()
 
         if record:
             self.env = gym.wrappers.Monitor(self.env, output_dir, force=True)
@@ -47,7 +47,6 @@ class AtariEnv:
 
         self.prev_screen = None
         self.end = True
-        self.lives = self.env.env.ale.lives()
         self.epsd_reward = 0.0
         self.recent_epsd_rewards = deque(maxlen=10)
 
@@ -105,7 +104,7 @@ class AtariEnv:
 
             screen, r, self.end, info = self.env.step(action)
             reward += r
-            clipped_reward += np.sign(r)
+            clipped_reward += np.sign(r) # TODO: this is questionable
 
             if self.one_life and info['ale.lives'] < self.lives:
                 self.end = True
@@ -127,7 +126,8 @@ class AtariEnv:
 
 
 if __name__ == '__main__':
-    env = AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84)
+    env = AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84, False,
+                   record=True, output_dir='.')
     """{
         0: 'Noop',
         1: 'Fire',
