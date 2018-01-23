@@ -97,14 +97,12 @@ class AtariEnv:
 
         screen = None
         reward = 0
-        clipped_reward = 0
         for i in range(self.frame_skip):
             if i > 0:
                 self.prev_screen = screen
 
             screen, r, self.end, info = self.env.step(action)
             reward += r
-            clipped_reward += np.sign(r) # TODO: this is questionable
 
             if self.one_life and info['ale.lives'] < self.lives:
                 self.end = True
@@ -117,17 +115,15 @@ class AtariEnv:
         self.frame_queue.append(frame)
         state = np.array(self.frame_queue)
         self.epsd_reward += reward
-        if clipped_reward > 1:
-            print('wow: clipped reward', clipped_reward)
-        return state, clipped_reward
+
+        return state, np.sign(reward)
 
     def close(self):
         self.env.close()
 
 
 if __name__ == '__main__':
-    env = AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84, False,
-                   record=True, output_dir='.')
+    env = AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84, False)
     """{
         0: 'Noop',
         1: 'Fire',
