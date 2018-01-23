@@ -45,6 +45,7 @@ def parse_args():
     parser.add_argument('--exp_name', type=str, default='')
 
     args = parser.parse_args()
+    args.frames_per_env = args.total_frames // args.num_envs
     args.output = os.path.join(args.output, args.env_name)
     if args.exp_name:
         args.output = '%s_%s' % (args.output, args.exp_name)
