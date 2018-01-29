@@ -10,7 +10,7 @@ with reference to the [OpenAI baseline](https://github.com/openai/baselines/tree
 and note down some key design choices to help understand the codebase.
 
 
-##Design
+## Design
 
 In the original A3C, N instances of the enviroment, e.g. an Atari game, run asynchronously 
 and each instance has its own actor to produce trajactories (sequences of game play timesteps)
@@ -37,7 +37,7 @@ training on Pong with 16 environments/processes, which is more than 20% faster t
 [existing implementation](https://github.com/ikostrikov/pytorch-a2c-ppo-acktr) running on the same machine.
 Benchmarking on machines with more CPU cores will be added.
 
-![](figs/pong.png) ![](figs/space_invaders.png)
+<img src="figs/pong.png" width="425"/> <img src="figs/space_invaders.png" width="425"/> 
 
 
 ## Usage
