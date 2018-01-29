@@ -83,6 +83,7 @@ class AtariEnv:
                 self.prev_screen = screen
 
         frame = preprocess_frame(screen, self.prev_screen, self.frame_size)
+        self.prev_screen = screen
         self.frame_queue.append(frame)
         return np.array(self.frame_queue)
 

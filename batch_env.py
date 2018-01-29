@@ -72,8 +72,6 @@ class BatchSyncEnv:
 
         while True:
             cv.wait_for_work(eid)
-            # if eid == 0:
-            #     print('action:', shared_buffer.actions[eid])
 
             if env.end: # should only happen at the very beginning
                 next_state = env.reset()
@@ -89,8 +87,7 @@ class BatchSyncEnv:
             cv.work_done_maybe_notify_master(eid)
 
     def step(self, actions):
-        """actor should be a function that takes states and produce actions
-
+        """
         state -> action -> reward, non_end, next_state
         """
         # prepare actions
@@ -123,8 +120,6 @@ if __name__ == '__main__':
     num_envs = 8
     # env_thunk = lambda : AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84)
     env_thunk = lambda : AtariEnv('PongNoFrameskip-v4', 4, 4, 84)
-    # envs = [AtariEnv('SpaceInvadersNoFrameskip-v4', 4, 4, 84)
-    #         for _ in range(num_envs)]
     benv = BatchSyncEnv(env_thunk, num_envs)
     benv.create_processes()
     actions = np.random.randint(0, benv.num_actions, (num_envs,))

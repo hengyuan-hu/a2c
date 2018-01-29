@@ -81,6 +81,8 @@ def test_experience1():
 
     print('returns')
     print(returns.view(3, 3))
+
+    print('advantages')
     print(returns.view(3, 3) - exp.rewards)
 
 

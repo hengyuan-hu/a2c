@@ -69,7 +69,7 @@ if __name__ == '__main__':
     # eval env
     eval_env = env.AtariEnv(
         cfg.env_name, cfg.frame_skip, cfg.num_frames, cfg.frame_size, False)
-    evaluator = lambda model, logger: train.evaluate(eval_env, 3, model, logger)
+    evaluator = lambda model, logger: train.evaluate(eval_env, 5, model, logger)
 
     num_actions = train_env.num_actions
     net = network.build_default_network(

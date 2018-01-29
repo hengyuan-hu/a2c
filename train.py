@@ -26,12 +26,11 @@ def update(model, optim, next_vals, exps, gamma, ent_coef, max_grad_norm, logger
 
 def train(model, env, config, evaluator):
     logger = utils.Logger(os.path.join(config.output, 'train_log.txt'))
-    optim = torch.optim.RMSprop(model.parameters(), lr=7e-4, alpha=0.99, eps=1e-5)
-    exp_buffer = Experience(env.num_envs, config.traj_len, env.state_shape)
-    # action_dist = np.zeros(env.num_actions)
-
-    best_avg_rewards = -float('inf')
     # TODO: lrschedule='linear'
+    optim = torch.optim.RMSprop(
+        model.parameters(), lr=config.lr, alpha=config.alpha, eps=config.eps)
+    exp_buffer = Experience(env.num_envs, config.traj_len, env.state_shape)
+    best_avg_rewards = -float('inf')
 
     # reset
     states, *_ = env.step(None)
