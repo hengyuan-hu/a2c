@@ -70,7 +70,12 @@ if __name__ == '__main__':
     netfile = os.path.join(args.output, 'net.pth')
     num_actions = eval_env.num_actions
     net = network.build_default_network(
-        cfg.num_frames, cfg.frame_size, num_actions, None, cfg.weight_norm, netfile)
+        cfg.num_frames,
+        cfg.frame_size,
+        num_actions,
+        None,
+        cfg.weight_norm,
+        netfile)
     a2c_model = a2c.A2C(net.cuda())
 
     evaluate(eval_env, 5, a2c_model, args.greedy)

@@ -116,8 +116,8 @@ class AtariEnv:
         self.frame_queue.append(frame)
         state = np.array(self.frame_queue)
         self.epsd_reward += reward
-
-        return state, np.sign(reward)
+        clipped_reward = np.sign(reward)
+        return state, clipped_reward
 
     def close(self):
         self.env.close()
