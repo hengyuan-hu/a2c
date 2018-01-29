@@ -9,6 +9,7 @@ detailed description of A2C is hard to find online. In this project, we implemen
 with reference to the [OpenAI baseline](https://github.com/openai/baselines/tree/master/baselines/a2c)
 and note down some key design choices to help understand the codebase.
 
+
 ##Design
 
 In the original A3C, N instances of the enviroment, e.g. an Atari game, run asynchronously 
@@ -28,6 +29,7 @@ node in the trajectory record the information of the last two frames of one epis
 in the trajactory record the begining of a new episode. In this way, we can easily convert N trajectories
 if length T into N * T pairs of (input, target) tuples to maximize the training speed.
 
+
 ## Performance
 
 This implementation is very fast. It runs at 2300 frames/s on my 4 core CPU + GTX1080 while
@@ -35,8 +37,7 @@ training on Pong with 16 environments/processes, which is more than 20% faster t
 [existing implementation](https://github.com/ikostrikov/pytorch-a2c-ppo-acktr) running on the same machine.
 Benchmarking on machines with more CPU cores will be added.
 
-![](figs/pong.png)
-![](figs/space_invaders.png)
+![](figs/pong.png) ![](figs/space_invaders.png)
 
 
 ## Usage
@@ -44,6 +45,7 @@ Benchmarking on machines with more CPU cores will be added.
 python3 main.py --env_name SpaceInvadersNoFrameskip-v4 --num_envs 16 --exp_name run1
 ```
 See main.py for a complete list of optional command line arguments.
+
 
 ## Future Work
 1. [NoisyNet for exploration](https://arxiv.org/abs/1706.10295)
