@@ -1,59 +1,50 @@
-# Pytorch Implementation of Rainbow
+# Pytorch Implementation of A2C
 
-This repo is a partial implementation of the [Rainbow](https://arxiv.org/pdf/1710.02298.pdf) 
-agent published by researchers from DeepMind.
-The implementation is efficient and of high quality. It trains at a speed of 
-350 frames/s on a PC with a 3.5GHz CPU and GTX1080 GPU.
+This repo implements the A2C algorothm for reinforcement learning with emphasis on 
+speed and modularity. A2C is the synchronized version of 
+[Asynchronous advantage actor-critic (A3C)](https://arxiv.org/pdf/1602.01783.pdf). A2C has
+been implemented and studied by many AI researchers and notablely been part 
+of the [OpenAI baseline](https://blog.openai.com/baselines-acktr-a2c/). However, the 
+detailed description of A2C is hard to find online. In this project, we implement our own
+with reference to the [OpenAI baseline](https://github.com/openai/baselines/tree/master/baselines/a2c)
+and note down some key design choices to help understand the codebase.
 
-Rainbow is a deep Q learning based agent that combines a bunch of existing techiques
-such as dueling dqn, distributional dqn, etc. This repo currenly implemented the 
-following dqn variants:
-* [DQN](https://www.nature.com/articles/nature14236)
-* [Double DQN](https://arxiv.org/abs/1509.06461)
-* [Dueling DQN](https://arxiv.org/abs/1511.06581)
-* [Distributional DQN](https://arxiv.org/pdf/1707.06887.pdf)
-* [Noisy Net](https://arxiv.org/abs/1706.10295)
+##Design
 
-and it will need the following extensions to become a full "Rainbow":
-* Multi-step learning
-* Priority Replay
+In the original A3C, N instances of the enviroment, e.g. an Atari game, run asynchronously 
+and each instance has its own actor to produce trajactories (sequences of game play timesteps)
+used for asynchronous parameter updates. A straightforward modification would be to wait until
+every environment to produce a trajactory and then batch those trajactories together for one update.
+However, this approach is slow because it does not use GPU efficiently. In A2C, a batch of environments
+are sychronized at every step, meaning that they produce a batch of states, the agent consume that batch
+and produce a batch of actions, and then the environments perform corresponding actions to produce the
+next batch of states. This method can maximize the utilization of GPU and thus increase speed. 
 
-## Hyperparameters
-
-The hyperparameters in this repo follows the ones described in 
-[Rainbow](https://arxiv.org/pdf/1710.02298.pdf)
-paper as close as possible. However, there may still be some differences due to
-misunderstanding.
+In A3C, each enviroment collect a trajectory of maximum length T and the trajectory may be shorter 
+if end state is encountered. In A2C, we naturally repeat the batched step T times to collect N trajectories
+of length T. However, end states may appear in one or more trajactories. In those cases, the trajectory is
+simply a concatenation of two shorter trajectories. For example, if T = 5, it may happen that the first 2
+node in the trajectory record the information of the last two frames of one episode and the last 3 node
+in the trajactory record the begining of a new episode. In this way, we can easily convert N trajectories
+if length T into N * T pairs of (input, target) tuples to maximize the training speed.
 
 ## Performance
 
-DQN agent often takes days to train. For sanity check, we can
-train a agent to play a simple game "boxing". Follwing is the learning curve
-of a dueling double dqn trained on boxing.
+This implementation is very fast. It runs at 2300 frames/s on my 4 core CPU + GTX1080 while
+training on Pong with 16 environments/processes, which is more than 20% faster than some 
+[existing implementation](https://github.com/ikostrikov/pytorch-a2c-ppo-acktr) running on the same machine.
+Benchmarking on machines with more CPU cores will be added.
 
-![](figs/boxing.png)
+![](figs/pong.png)
+![](figs/space_invaders.png)
 
-The agent almost solves boxing after around 12M frames, which is a good sign
-that the implementation is working.
 
-To test the distributional DQN and Noisy Net, the agent is trained on "breakout" since
-distributional DQN performs significantly better than others on this game, 
-reaching >400 scores rapidly while other DQN methods struggle to do so.
+## Usage
+```
+python3 main.py --env_name SpaceInvadersNoFrameskip-v4 --num_envs 16 --exp_name run1
+```
+See main.py for a complete list of optional command line arguments.
 
-![](figs/breakout.png)
-
-From the figure we see that the agent can reach >400 scores very rapidly and steadily.
-Note that the publicly reported numbers on papers are produced by training the agent for
-200M frames while here it trains only for 50M frames due to computation cost.
-
-Figures here are smoothed.
-
-## Future Works
-
-We plan to implement multi-step learing and priority replay. Also, the current
-implementation uses a simple wrapper on the [Arcade Learning Enviroment](https://github.com/mgbellemare/Arcade-Learning-Environment).
-We may want to shift to OpenAI gym for better visualization and video recording.
-On top of Rainbow, it will also be interesting to include other new techniques,
-such as [Distributional RL with Quantile Regression](https://arxiv.org/pdf/1710.10044.pdf).
-
-Contributions and bug-catchings are welcome!
+## Future Work
+1. [NoisyNet for exploration](https://arxiv.org/abs/1706.10295)
+2. [ACKTR](https://arxiv.org/abs/1708.05144)
