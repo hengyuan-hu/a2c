@@ -6,7 +6,7 @@ import utils
 
 class ActorCriticNetwork(nn.Module):
     def __init__(self, conv, fc, value, pi_logit):
-        super(ActorCriticNetwork, self).__init__()
+        super().__init__()
         self.conv = conv
         self.fc = fc
         self.value = value

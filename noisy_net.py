@@ -7,7 +7,7 @@ from torch.autograd import Variable
 class NoisyLinear(nn.Module):
     """Factorised Gaussian NoisyNet"""
     def __init__(self, in_features, out_features, sigma0):
-        super(NoisyLinear, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.weight = nn.Parameter(torch.Tensor(out_features, in_features))
