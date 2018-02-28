@@ -16,14 +16,11 @@ and write down some key design choices to help understand the codebase.
 In the original A3C, N instances of the enviroment, e.g. an Atari
 game, run asynchronously and each instance has its own actor to
 produce trajactories (sequences of game play timesteps) used for
-asynchronous parameter updates. A straightforward modification would
-be to wait until every environment to produce a trajactory and then
-batch those trajactories together for one update.  However, this
-approach is slow because it does not use GPU efficiently. In A2C, a
+asynchronous parameter updates. In A2C, a
 batch of environments are sychronized at every step, meaning that they
 produce a batch of states, the agent consume that batch and produce a
 batch of actions, and then the environments perform corresponding
-actions to produce the next batch of states. This method can maximize
+actions to produce the next batch of states. This method can increase
 the utilization of GPU and thus increase speed.
 
 In A3C, each enviroment collect a trajectory of maximum length T and
