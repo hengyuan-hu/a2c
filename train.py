@@ -15,13 +15,14 @@ def update(model, optim, next_vals, exps, gamma, ent_coef, max_grad_norm, logger
 
         loss = loss.mean()
         loss.backward()
-        nn.utils.clip_grad_norm(model.parameters(), max_grad_norm)
+        grad_norm = nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
         optim.step()
         optim.zero_grad()
-        logger.append('loss', loss.data[0])
-        logger.append('val_loss', vals_loss.mean().data[0])
-        logger.append('action_loss', actions_loss.mean().data[0])
-        logger.append('entropy', entropys.mean().data[0])
+        logger.append('loss', loss.detach().item())
+        logger.append('val_loss', vals_loss.mean().detach().item())
+        logger.append('action_loss', actions_loss.mean().detach().item())
+        logger.append('entropy', entropys.mean().detach().item())
+        logger.append('grad_norm', grad_norm)
 
 
 def train(model, env, config, evaluator):
@@ -84,7 +85,7 @@ def evaluate(env, num_epsd, model, logger):
     state = env.reset()
     while epsd_idx < num_epsd:
         state = torch.from_numpy(state).unsqueeze(0).cuda()
-        action = model.get_actions(state, False)[0][0]
+        action = model.get_actions(state, False)[0]
         action_dist[action] += 1
         state, _ = env.step(action)
         epsd_iters += 1

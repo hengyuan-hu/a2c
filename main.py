@@ -55,6 +55,7 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
+    torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
     utils.set_all_seeds(args.seed)
     cfg = utils.Config(vars(args))

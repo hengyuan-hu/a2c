@@ -1,6 +1,6 @@
 import torch.nn as nn
 from torch.nn.utils.weight_norm import weight_norm
-from noisy_net import NoisyLinear
+# from noisy_net import NoisyLinear
 import utils
 
 
@@ -19,7 +19,7 @@ class ActorCriticNetwork(nn.Module):
         feat = self.conv(x)
         feat = feat.view(batch, -1)
         feat = self.fc(feat)
-        val = self.value(feat)
+        val = self.value(feat).squeeze(1)
         pi_logit = self.pi_logit(feat)
         return val, pi_logit
 

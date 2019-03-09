@@ -4,7 +4,6 @@ import json
 import random
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import numpy as np
 from collections import OrderedDict
 
@@ -56,7 +55,7 @@ def init_net(net, net_file):
 
 
 def count_output_size(input_shape, module):
-    fake_input = Variable(torch.FloatTensor(*input_shape), volatile=True)
+    fake_input = torch.FloatTensor(*input_shape)
     output_size = module.forward(fake_input).view(-1).size()[0]
     return output_size
 

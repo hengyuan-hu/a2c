@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 import torch.nn as nn
-from torch.autograd import Variable
 import distribution as dist
 import utils
 
@@ -21,19 +20,17 @@ class A2C:
 
     def loss(self, states, actions, returns, ent_coef):
         assert self.net.training
-        states = Variable(states)
-        actions = Variable(actions)
-        returns = Variable(returns)
         vals, pi_logits = self.net(states)
 
-        advs = returns - vals
+        advs = returns.detach() - vals
         vals_loss = 0.5 * advs.pow(2)
         actions_logp, entropys = dist.categorical_logp(pi_logits, actions, True)
-        actions_loss = -(Variable(advs.data) * actions_logp)
+        actions_loss = -(advs.detach() * actions_logp)
 
         utils.assert_eq(vals_loss.size(), actions_logp.size())
         utils.assert_eq(vals_loss.size(), entropys.size())
 
+        # loss = vals_loss# - entropys * ent_coef
         loss = actions_loss + vals_loss - entropys * ent_coef
         return loss, vals_loss, actions_loss, entropys
 
@@ -48,9 +45,8 @@ class A2C:
         # utils.assert_eq(type(states), torch.cuda.FloatTensor)
         assert not self.net.training
 
-        states = Variable(states, volatile=True)
         vals, _ = self.net(states)
-        return vals.data
+        return vals.detach()
 
     def get_actions(self, states, greedy):
         """
@@ -63,10 +59,9 @@ class A2C:
         # utils.assert_eq(type(states), torch.cuda.FloatTensor)
         assert not self.net.training
 
-        states = Variable(states, volatile=True)
         _, pi_logits = self.net(states)
         actions = dist.categorical_sample(pi_logits, greedy)
-        return actions.data
+        return actions.detach()
 
 
 if __name__ == '__main__':

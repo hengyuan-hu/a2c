@@ -22,8 +22,13 @@ class Experience:
         """add a timestep obtained from batch_env.step()
 
         """
+        # print(states.size())
+        # print(self.states.size())
         self.states[self.timestep_count] = states
         self.actions[self.timestep_count] = actions
+        # print(self.rewards.size())
+        # print(rewards.size())
+        # print(self.timestep_count)
         self.rewards[self.timestep_count] = rewards
         self.non_ends[self.timestep_count] = non_ends
 
@@ -36,15 +41,15 @@ class Experience:
         utils.assert_eq(self.timestep_count, self.traj_len)
         self.timestep_count = 0
 
-        self.returns[-1] = next_vals
+        self.returns[-1] = next_vals.detach()
         for i in range(self.traj_len-1, -1, -1):
             self.returns[i] = (self.returns[i+1] * self.non_ends[i] * gamma
-                               + self.rewards[i])
+                               + self.rewards[i]).detach()
 
         batch = self.traj_len * self.num_envs
-        states = self.states.view(batch, *self.state_shape).contiguous()
-        actions = self.actions.view(batch, 1).contiguous()
-        returns = self.returns[:-1].view(batch, 1).contiguous()
+        states = self.states.view(batch, *self.state_shape)#.contiguous()
+        actions = self.actions.view(batch)#.contiguous()
+        returns = self.returns[:-1].view(batch)#.contiguous()
         return states, actions, returns
 
 
